@@ -1,0 +1,1030 @@
+import { useState, useCallback, useMemo } from "react";
+import { Check, ChevronRight, ChevronLeft, Sparkles, ShoppingBag, Gift } from "lucide-react";
+
+// ——— Data ———
+
+const TIERS = [
+  { id: "basic", name: "Cơ Bản (Basic)", avgCost: 39000, desc: "Xinh xắn, nhẹ nhàng", minStems: 5, maxStems: 7, costPerStem: 6500, fillerCost: 15000, wrappingCost: 15000 },
+  { id: "standard", name: "Tiêu Chuẩn (Standard)", avgCost: 145000, desc: "Trọn vẹn, tinh tế", minStems: 8, maxStems: 12, costPerStem: 14500, fillerCost: 25000, wrappingCost: 20000 },
+  { id: "premium", name: "Cao Cấp (Premium)", avgCost: 825000, desc: "Sang trọng, đẳng cấp", minStems: 13, maxStems: 20, costPerStem: 55000, fillerCost: 40000, wrappingCost: 30000 }
+];
+
+const FLOWERS = {
+  basic: [
+    { id: "baby", name: "Hoa Baby (Baby's breath)", price: 4000 },
+    { id: "tana", name: "Hoa Cúc Tana", price: 5000 },
+    { id: "statice", name: "Hoa Sao Tím", price: 6000 },
+    { id: "carnation", name: "Hoa Cẩm Chướng", price: 8000 },
+    { id: "gerbera", name: "Hoa Đồng Tiền", price: 8500 },
+    { id: "heathbell", name: "Hoa Thạch Thảo", price: 6500 },
+    { id: "pingpong", name: "Hoa Cúc Ping Pong", price: 7500 },
+  ],
+  standard: [
+    { id: "dalat_rose", name: "Hoa Hồng Đà Lạt", price: 12500 },
+    { id: "sunflower", name: "Hoa Hướng Dương", price: 10000 },
+    { id: "lisianthus", name: "Hoa Cát Tường", price: 15000 },
+    { id: "ranunculus", name: "Hoa Mao Lương", price: 21500 },
+    { id: "wax", name: "Hoa Thanh Liễu", price: 12500 },
+    { id: "peony_chry", name: "Hoa Cúc Mẫu Đơn", price: 12000 },
+    { id: "violet", name: "Hoa Violet", price: 15000 },
+    { id: "freesia", name: "Hoa Freesias", price: 17500 },
+  ],
+  premium: [
+    { id: "tulip", name: "Hoa Tulip", price: 35000 },
+    { id: "lily", name: "Hoa Lily", price: 32500 },
+    { id: "hydrangea", name: "Hoa Cẩm Tú Cầu", price: 42500 },
+    { id: "mini_orchid", name: "Lan Hồ Điệp Mini", price: 55000 },
+    { id: "peony", name: "Hoa Mẫu Đơn (Peony)", price: 65000 },
+    { id: "protea", name: "Hoa Protea", price: 75000 },
+    { id: "calla", name: "Hoa Calla Lily", price: 50000 },
+    { id: "anthurium", name: "Hoa Anthurium", price: 45000 },
+  ]
+};
+
+const formatVND = (price: number | undefined) => {
+  if (typeof price !== "number" || isNaN(price)) return "0 VNĐ";
+  return price.toLocaleString('vi-VN') + ' VNĐ';
+};
+
+interface Selection {
+  productType: "bouquet" | "gift_box" | "";
+  tier: "basic" | "standard" | "premium" | "";
+  stems: number;
+  includeFiller: boolean;
+  includeWrapping: boolean;
+  flower: string;
+  hasCard: boolean;
+  cardSender: string;
+  cardName: string;
+  cardMessage: string;
+}
+
+interface BouquetBuilderProps {
+  onAddToCart: (item: string, price: number) => void;
+  type?: "bouquet" | "gift_box";
+}
+
+export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
+  const [step, setStep] = useState(type ? 1 : 0);
+  const [selection, setSelection] = useState<Selection>({
+    productType: type || "",
+    tier: "",
+    stems: 0,
+    includeFiller: false,
+    includeWrapping: false,
+    flower: "",
+    hasCard: false,
+    cardSender: "",
+    cardName: "",
+    cardMessage: "",
+  });
+  const [completed, setCompleted] = useState(false);
+
+  const steps = useMemo(() => {
+    if (selection.productType === "") {
+        return ["Sản Phẩm"];
+    }
+    if (selection.productType === "gift_box") {
+      return ["Sản Phẩm", "Thông Điệp"];
+    }
+    return ["Sản Phẩm", "Phân Khúc", "Chi Tiết Hoa", "Thông Điệp"];
+  }, [selection.productType]);
+
+  const computePrice = useCallback(() => {
+    if (selection.productType === "") return 0;
+    if (selection.productType === "gift_box") return 210000;
+    
+    const tierObj = TIERS.find(t => t.id === selection.tier);
+    if (!tierObj) return 0;
+
+    const flowerObj = selection.flower && selection.tier
+      ? FLOWERS[selection.tier as "basic" | "standard" | "premium"]?.find(f => f.id === selection.flower)
+      : null;
+    const stemCost = flowerObj ? flowerObj.price : tierObj.costPerStem;
+
+    let total = selection.stems * stemCost;
+    if (selection.includeFiller) {
+      total += tierObj.fillerCost;
+    }
+    if (selection.includeWrapping) {
+      total += tierObj.wrappingCost;
+    }
+    return total;
+  }, [selection]);
+
+  const price = computePrice();
+
+  const canProceed = () => {
+    if (step === 0) return !!selection.productType;
+    if (selection.productType === "bouquet") {
+      if (step === 1) return !!selection.tier;
+      if (step === 2) return !!selection.flower && selection.stems > 0;
+    }
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    
+    let name = "Hộp Quà Hoa (Flower Gift Box)";
+    
+    if (selection.productType === "bouquet" && selection.tier) {
+      const tierObj = TIERS.find(t => t.id === selection.tier);
+      const flowerObj = FLOWERS[selection.tier as "basic" | "standard" | "premium"]?.find(f => f.id === selection.flower);
+      name = `Bó Hoa ${tierObj?.name} - ${flowerObj?.name || 'Ngẫu nhiên'} (${selection.stems} cành)`;
+    }
+
+    onAddToCart(name, price);
+    setCompleted(true);
+  };
+
+  const nextStep = () => {
+    if (canProceed() && step < steps.length - 1) {
+      setStep(step + 1);
+      if (selection.productType === "bouquet" && step === 1 && !selection.flower) {
+        const tierObj = TIERS.find(t => t.id === selection.tier);
+        setSelection(s => {
+          const t = s.tier as "basic" | "standard" | "premium";
+          const defaultFlower = FLOWERS[t][0];
+          let desiredStems = s.stems;
+          if (tierObj) {
+            desiredStems = Math.floor(tierObj.avgCost / defaultFlower.price);
+            desiredStems = Math.max(tierObj.minStems, Math.min(tierObj.maxStems, desiredStems));
+          }
+          return { 
+            ...s, 
+            flower: defaultFlower.id,
+            stems: desiredStems 
+          };
+        });
+      }
+    }
+  };
+
+  const prevStep = () => {
+    const minStep = type ? 1 : 0;
+    if (step > minStep) setStep(step - 1);
+  };
+
+  const currentTierObj = TIERS.find(t => t.id === selection.tier);
+  const activeFlowerObj = selection.flower && selection.tier
+    ? FLOWERS[selection.tier as "basic" | "standard" | "premium"]?.find((f) => f.id === selection.flower)
+    : null;
+  const activeStemCost = activeFlowerObj ? activeFlowerObj.price : (currentTierObj?.costPerStem || 0);
+
+  if (completed) {
+    return (
+      <section id="builder" style={{ background: "#737a58", padding: "7rem 2rem" }}>
+        <div style={{ maxWidth: "600px", margin: "0 auto", textAlign: "center" }}>
+          <div
+            style={{
+              width: "80px",
+              height: "80px",
+              borderRadius: "50%",
+              background: "#C4A35A",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 2rem",
+            }}
+          >
+            <Check size={36} color="#FAF6F0" />
+          </div>
+          <h2
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "3rem",
+              fontWeight: 400,
+              color: "#FAF6F0",
+              marginBottom: "1rem",
+            }}
+          >
+            <em>Cảm Ơn Bạn!</em>
+          </h2>
+          <p
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.9rem",
+              color: "rgba(250,246,240,0.7)",
+              lineHeight: 1.8,
+              marginBottom: "2.5rem",
+            }}
+          >
+            Tuyệt tác nghệ thuật của bạn đã được thêm vào giỏ hàng. Các nghệ nhân của chúng tôi sẽ bắt đầu chuẩn bị một cách tận tâm nhất.
+          </p>
+          <button
+            onClick={() => {
+              setCompleted(false);
+              setStep(type ? 1 : 0);
+              setSelection({
+                productType: type || "",
+                tier: "",
+                stems: 0,
+                includeFiller: false,
+                includeWrapping: false,
+                flower: "",
+                hasCard: false,
+                cardSender: "",
+                cardName: "",
+                cardMessage: "",
+              });
+            }}
+            style={{
+              background: "#C4A35A",
+              border: "none",
+              color: "#FAF6F0",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.72rem",
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              padding: "0.9rem 2.5rem",
+              cursor: "pointer",
+            }}
+          >
+            Tạo Sản Phẩm Khác
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="builder" style={{ background: "#737a58", padding: "7rem 0", overflow: "hidden", minHeight: "800px" }}>
+      <div style={{ maxWidth: "1600px", margin: "0 auto", padding: "0 4rem" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <p
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.68rem",
+              letterSpacing: "0.4em",
+              color: "#C4A35A",
+              textTransform: "uppercase",
+              marginBottom: "1rem",
+            }}
+          >
+            Thiết Kế Độc Bản
+          </p>
+          <h2
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
+              fontWeight: 400,
+              color: "#FAF6F0",
+              lineHeight: 1.1,
+              marginBottom: "1rem",
+            }}
+          >
+            <em>Sáng Tạo</em> Món Quà Của Bạn
+          </h2>
+          <p
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.85rem",
+              color: "rgba(250,246,240,0.6)",
+              letterSpacing: "0.04em",
+              fontWeight: 300,
+            }}
+          >
+            Tùy chỉnh bó hoa hoặc hộp quà mang đậm dấu ấn cá nhân
+          </p>
+        </div>
+
+        {/* Step indicators */}
+        {selection.productType !== "" && (
+            <div
+            style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "0",
+                marginBottom: "3.5rem",
+                overflowX: "auto",
+                paddingBottom: "0.5rem",
+            }}
+            >
+            {steps.map((s, i) => {
+              if (type && i === 0) return null;
+              return (
+                <div key={s} style={{ display: "flex", alignItems: "center" }}>
+                <button
+                    onClick={() => {
+                        const minStep = type ? 1 : 0;
+                        if (i < step && i >= minStep) setStep(i);
+                    }}
+                    style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    background: "none",
+                    border: "none",
+                    cursor: i < step ? "pointer" : "default",
+                    minWidth: "80px",
+                    }}
+                >
+                    <div
+                    style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        border: `2px solid ${i <= step ? "#C4A35A" : "rgba(196,163,90,0.3)"}`,
+                        background:
+                        i < step
+                            ? "#C4A35A"
+                            : i === step
+                            ? "rgba(196,163,90,0.2)"
+                            : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "all 0.4s ease",
+                    }}
+                    >
+                    {i < step ? (
+                        <Check size={14} color="#FAF6F0" />
+                    ) : (
+                        <span
+                        style={{
+                            fontFamily: "'Cormorant Garamond', serif",
+                            fontSize: "0.9rem",
+                            color: i === step ? "#C4A35A" : "rgba(196,163,90,0.5)",
+                            fontWeight: 500,
+                        }}
+                        >
+                        {type ? i : i + 1}
+                        </span>
+                    )}
+                    </div>
+                    <span
+                    style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: "0.6rem",
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        color:
+                        i === step
+                            ? "#C4A35A"
+                            : i < step
+                            ? "rgba(196,163,90,0.8)"
+                            : "rgba(196,163,90,0.35)",
+                        transition: "color 0.4s ease",
+                    }}
+                    >
+                    {s}
+                    </span>
+                </button>
+                {i < steps.length - 1 && (
+                    <div
+                    style={{
+                        width: "40px",
+                        height: "1px",
+                        background:
+                        i < step
+                            ? "#C4A35A"
+                            : "rgba(196,163,90,0.2)",
+                        transition: "background 0.4s ease",
+                        marginBottom: "22px",
+                    }}
+                    />
+                )}
+                </div>
+              );
+            })}
+            </div>
+        )}
+
+        {/* Main builder layout */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 360px",
+            gap: "2rem",
+            alignItems: "start",
+          }}
+          className="builder-grid"
+        >
+          {/* Step content */}
+          <div
+            style={{
+              background: "rgba(250,246,240,0.05)",
+              border: "1px solid rgba(196,163,90,0.15)",
+              padding: "2.5rem",
+              minHeight: "450px"
+            }}
+          >
+            {/* Step 0: Product Type (Bouquet or Gift Box) */}
+            {step === 0 && (
+              <div style={{ animation: "fadeIn 0.5s ease" }}>
+                <h3
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "1.8rem",
+                    fontWeight: 400,
+                    color: "#FAF6F0",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Bạn đang tìm kiếm gì?
+                </h3>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.5)", marginBottom: "2rem", fontWeight: 300 }}>
+                  Lựa chọn loại sản phẩm để bắt đầu tùy chỉnh
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+                  <button
+                    onClick={() => {
+                        setSelection((s) => ({ ...s, productType: "bouquet" }));
+                        setStep(1);
+                    }}
+                    style={{
+                      background: selection.productType === "bouquet" ? "rgba(196,163,90,0.15)" : "rgba(250,246,240,0.04)",
+                      border: `1px solid ${selection.productType === "bouquet" ? "#C4A35A" : "rgba(250,246,240,0.1)"}`,
+                      cursor: "pointer",
+                      padding: "2rem",
+                      textAlign: "center",
+                      transition: "all 0.3s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "1rem"
+                    }}
+                  >
+                    <Sparkles size={36} color={selection.productType === "bouquet" ? "#C4A35A" : "rgba(250,246,240,0.6)"} />
+                    <div>
+                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", color: "#FAF6F0", marginBottom: "0.5rem" }}>Bó Hoa</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.7)" }}>Nhiều lựa chọn hoa & phong cách cắm tay</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                        setSelection((s) => ({ ...s, productType: "gift_box" }));
+                        setStep(1);
+                    }}
+                    style={{
+                      background: selection.productType === "gift_box" ? "rgba(196,163,90,0.15)" : "rgba(250,246,240,0.04)",
+                      border: `1px solid ${selection.productType === "gift_box" ? "#C4A35A" : "rgba(250,246,240,0.1)"}`,
+                      cursor: "pointer",
+                      padding: "2rem",
+                      textAlign: "center",
+                      transition: "all 0.3s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "1rem"
+                    }}
+                  >
+                    <Gift size={36} color={selection.productType === "gift_box" ? "#C4A35A" : "rgba(250,246,240,0.6)"} />
+                    <div>
+                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", color: "#FAF6F0", marginBottom: "0.5rem" }}>Hộp Quà Hoa</div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.7)" }}>Bao gồm 8 đóa hồng, gấu bông & hộp quà</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 1 for Bouquet: Tier */}
+            {selection.productType === "bouquet" && step === 1 && (
+              <div style={{ animation: "fadeIn 0.5s ease" }}>
+                <h3
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "1.8rem",
+                    fontWeight: 400,
+                    color: "#FAF6F0",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Chọn Phân Khúc Bó Hoa
+                </h3>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.5)", marginBottom: "2rem", fontWeight: 300 }}>
+                  Mỗi ngân sách đều được chúng tôi chăm chút hoàn hảo
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
+                  {TIERS.map((tier) => (
+                    <button
+                      key={tier.id}
+                      onClick={() => setSelection((s) => ({ 
+                          ...s, 
+                          tier: tier.id as any, 
+                          flower: "",
+                          stems: Math.floor(tier.avgCost / tier.costPerStem)
+                      }))}
+                      style={{
+                        background: selection.tier === tier.id ? "rgba(196,163,90,0.15)" : "rgba(250,246,240,0.04)",
+                        border: `1px solid ${selection.tier === tier.id ? "#C4A35A" : "rgba(250,246,240,0.1)"}`,
+                        cursor: "pointer",
+                        padding: "1.2rem 1.5rem",
+                        textAlign: "left",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", color: "#FAF6F0", marginBottom: "0.3rem" }}>
+                            {tier.name}
+                        </div>
+                        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.6)" }}>
+                            {tier.desc}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "1rem", color: "#C4A35A", fontWeight: 500, textAlign: "right" }}>
+                        {formatVND(tier.avgCost)}<br/><span style={{fontSize: "0.7rem", color: "rgba(196,163,90,0.7)", fontWeight: 300, display: "block", marginTop: "2px"}}>(Hoa chủ đạo)</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2 for Bouquet: Flowers, Stems, Other Costs */}
+            {selection.productType === "bouquet" && step === 2 && currentTierObj && (
+              <div style={{ animation: "fadeIn 0.5s ease", display: "flex", gap: "2rem", flexDirection: "column" }}>
+                <div>
+                  <h3
+                    style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "1.8rem",
+                      fontWeight: 400,
+                      color: "#FAF6F0",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    Chi Tiết Hoa
+                  </h3>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.5)", marginBottom: "2rem", fontWeight: 300 }}>
+                    Tùy chỉnh số lượng cành và các loại phí kèm theo
+                  </p>
+                </div>
+
+                {/* Select Flower */}
+                <div>
+                  <h4 style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "#FAF6F0", marginBottom: "1rem", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    1. Hoa Chủ Đạo
+                  </h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "1rem" }}>
+                    {FLOWERS[selection.tier as "basic"|"standard"|"premium"]?.map((flower) => (
+                      <button
+                        key={flower.id}
+                        onClick={() => setSelection((s) => ({ ...s, flower: flower.id }))}
+                        style={{
+                          background: selection.flower === flower.id ? "rgba(196,163,90,0.15)" : "rgba(250,246,240,0.04)",
+                          border: `1px solid ${selection.flower === flower.id ? "#C4A35A" : "rgba(250,246,240,0.1)"}`,
+                          cursor: "pointer",
+                          padding: "1rem 1.2rem",
+                          textAlign: "left",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "1rem",
+                          transition: "all 0.3s ease",
+                        }}
+                      >
+                        <div style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#FAF6F0", fontWeight: selection.flower === flower.id ? 500 : 300 }}>
+                          {flower.name}
+                        </div>
+                        {selection.flower === flower.id && (
+                          <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#C4A35A", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <Check size={12} color="#FAF6F0" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quantity & Other Costs Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "1.5rem" }}>
+                    <div>
+                        <h4 style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "#FAF6F0", marginBottom: "1rem", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                          2. Số Lượng ({currentTierObj.minStems}-{currentTierObj.maxStems})
+                        </h4>
+                        <div style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(250,246,240,0.03)", padding: "1rem", border: "1px solid rgba(250,246,240,0.1)" }}>
+                           <div style={{ display: "flex", gap: "0.5rem", border: "1px solid rgba(196,163,90,0.5)", borderRadius: "30px", overflow: "hidden" }}>
+                                <button 
+                                    onClick={() => setSelection(s => ({ ...s, stems: Math.max(currentTierObj.minStems, s.stems - 1) }))}
+                                    disabled={selection.stems <= currentTierObj.minStems}
+                                    style={{ 
+                                        background: "none", border: "none", color: selection.stems <= currentTierObj.minStems ? "rgba(250,246,240,0.2)" : "#FAF6F0", 
+                                        width: "36px", height: "36px", fontSize: "1.5rem", cursor: selection.stems <= currentTierObj.minStems ? "default" : "pointer",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        transition: "all 0.2s"
+                                    }}
+                                >
+                                    -
+                                </button>
+                                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", color: "#C4A35A", minWidth: "30px", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    {selection.stems}
+                                </div>
+                                <button 
+                                    onClick={() => setSelection(s => ({ ...s, stems: Math.min(currentTierObj.maxStems, s.stems + 1) }))}
+                                    disabled={selection.stems >= currentTierObj.maxStems}
+                                    style={{ 
+                                        background: "none", border: "none", color: selection.stems >= currentTierObj.maxStems ? "rgba(250,246,240,0.2)" : "#FAF6F0", 
+                                        width: "36px", height: "36px", fontSize: "1.2rem", cursor: selection.stems >= currentTierObj.maxStems ? "default" : "pointer",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        transition: "all 0.2s"
+                                    }}
+                                >
+                                    +
+                                </button>
+                           </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "#FAF6F0", marginBottom: "1rem", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                          3. Phụ Phí Đóng Gói
+                        </h4>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+                            <label
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.8rem",
+                                cursor: "pointer",
+                                background: selection.includeFiller ? "rgba(196,163,90,0.1)" : "rgba(250,246,240,0.03)",
+                                border: `1px solid ${selection.includeFiller ? "#C4A35A" : "rgba(250,246,240,0.1)"}`,
+                                padding: "0.8rem 1rem",
+                                transition: "all 0.3s ease",
+                            }}
+                            >
+                            <div
+                                style={{
+                                width: "20px",
+                                height: "20px",
+                                border: "1px solid rgba(196,163,90,0.6)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setSelection((s) => ({ ...s, includeFiller: !s.includeFiller }))
+                                }}
+                            >
+                                {selection.includeFiller && <div style={{ width: "12px", height: "12px", background: "#C4A35A" }} />}
+                            </div>
+                            <div style={{ flex: 1, userSelect: "none" }}>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "rgba(250,246,240,0.9)"}}>Hoa phụ & trang trí</div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.7rem", color: "rgba(250,246,240,0.5)", marginTop: "2px"}}>+{formatVND(currentTierObj.fillerCost)}</div>
+                            </div>
+                            </label>
+
+                            <label
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.8rem",
+                                cursor: "pointer",
+                                background: selection.includeWrapping ? "rgba(196,163,90,0.1)" : "rgba(250,246,240,0.03)",
+                                border: `1px solid ${selection.includeWrapping ? "#C4A35A" : "rgba(250,246,240,0.1)"}`,
+                                padding: "0.8rem 1rem",
+                                transition: "all 0.3s ease",
+                            }}
+                            >
+                            <div
+                                style={{
+                                width: "20px",
+                                height: "20px",
+                                border: "1px solid rgba(196,163,90,0.6)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setSelection((s) => ({ ...s, includeWrapping: !s.includeWrapping }))
+                                }}
+                            >
+                                {selection.includeWrapping && <div style={{ width: "12px", height: "12px", background: "#C4A35A" }} />}
+                            </div>
+                            <div style={{ flex: 1, userSelect: "none" }}>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "rgba(250,246,240,0.9)"}}>Vật liệu gói & Ruy băng</div>
+                                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.7rem", color: "rgba(250,246,240,0.5)", marginTop: "2px"}}>+{formatVND(currentTierObj.wrappingCost)}</div>
+                            </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step: Card / Message */}
+            {((selection.productType === "bouquet" && step === 3) || (selection.productType === "gift_box" && step === 1)) && (
+              <div style={{ animation: "fadeIn 0.5s ease" }}>
+                <h3
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "1.8rem",
+                    fontWeight: 400,
+                    color: "#FAF6F0",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  Thông Điệp Gửi Trao
+                </h3>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.5)", marginBottom: "2rem", fontWeight: 300 }}>
+                  Chúng tôi sẽ viết tay lời nhắn của bạn lên thiệp
+                </p>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.8rem",
+                    cursor: "pointer",
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      border: "1px solid rgba(196,163,90,0.6)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onClick={() => setSelection((s) => ({ ...s, hasCard: !s.hasCard }))}
+                  >
+                    {selection.hasCard && <div style={{ width: "12px", height: "12px", background: "#C4A35A" }} />}
+                  </div>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "rgba(250,246,240,0.9)", userSelect: "none" }}>
+                    Thêm thiệp viết tay
+                  </span>
+                </label>
+
+                {selection.hasCard && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem", animation: "slideDown 0.4s ease" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                        <input
+                        className="card-input"
+                        type="text"
+                        placeholder="Từ (Tên của bạn)"
+                        value={selection.cardSender}
+                        onChange={(e) => setSelection((s) => ({ ...s, cardSender: e.target.value }))}
+                        style={{
+                            background: "rgba(250,246,240,0.05)",
+                            border: "1px solid rgba(196,163,90,0.3)",
+                            padding: "0.8rem 1rem",
+                            fontFamily: "'Inter', sans-serif",
+                            fontSize: "0.85rem",
+                            color: "#FAF6F0",
+                            outline: "none",
+                        }}
+                        />
+                        <input
+                        className="card-input"
+                        type="text"
+                        placeholder="Gửi đến (Tên người nhận)"
+                        value={selection.cardName}
+                        onChange={(e) => setSelection((s) => ({ ...s, cardName: e.target.value }))}
+                        style={{
+                            background: "rgba(250,246,240,0.05)",
+                            border: "1px solid rgba(196,163,90,0.3)",
+                            padding: "0.8rem 1rem",
+                            fontFamily: "'Inter', sans-serif",
+                            fontSize: "0.85rem",
+                            color: "#FAF6F0",
+                            outline: "none",
+                        }}
+                        />
+                    </div>
+                    <textarea
+                      className="card-input"
+                      placeholder="Thông điệp ý nghĩa của bạn..."
+                      value={selection.cardMessage}
+                      onChange={(e) => setSelection((s) => ({ ...s, cardMessage: e.target.value }))}
+                      rows={4}
+                      style={{
+                        background: "rgba(250,246,240,0.05)",
+                        border: "1px solid rgba(196,163,90,0.3)",
+                        padding: "0.8rem 1rem",
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: "0.85rem",
+                        color: "#FAF6F0",
+                        outline: "none",
+                        resize: "none",
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Navigation buttons */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "auto",
+                paddingTop: "3rem",
+              }}
+            >
+              <button
+                onClick={prevStep}
+                disabled={step === 0}
+                style={{
+                  background: "none",
+                  border: "1px solid rgba(196,163,90,0.3)",
+                  color: step === 0 ? "rgba(250,246,240,0.2)" : "#FAF6F0",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "0.75rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  padding: "0.6rem 1.5rem",
+                  cursor: step === 0 ? "default" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  transition: "all 0.3s ease",
+                  opacity: step === 0 ? 0 : 1,
+                  pointerEvents: step === 0 ? "none" : "auto"
+                }}
+              >
+                <ChevronLeft size={16} /> Quay Lại
+              </button>
+
+              {step < steps.length - 1 ? (
+                <button
+                  onClick={nextStep}
+                  disabled={!canProceed()}
+                  style={{
+                    background: canProceed() ? "#C4A35A" : "rgba(196,163,90,0.2)",
+                    border: "none",
+                    color: canProceed() ? "#FAF6F0" : "rgba(250,246,240,0.4)",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    padding: "0.6rem 2rem",
+                    cursor: canProceed() ? "pointer" : "default",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  Tiếp Tục <ChevronRight size={16} />
+                </button>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  style={{
+                    background: "#FAF6F0",
+                    border: "none",
+                    color: "#737a58",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    padding: "0.6rem 2rem",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  <ShoppingBag size={16} /> Thêm Vào Giỏ
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Right Summary Panel */}
+          <div
+            style={{
+              padding: "2rem",
+              background: "#FAF6F0",
+              height: "fit-content",
+              position: "sticky",
+              top: "100px",
+            }}
+          >
+            <h4
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "1.4rem",
+                color: "#737a58",
+                marginBottom: "1.5rem",
+                borderBottom: "1px solid rgba(115, 122, 88,0.1)",
+                paddingBottom: "1rem",
+              }}
+            >
+              Tổng Quan
+            </h4>
+
+            {selection.productType === "" ? (
+                 <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "rgba(115, 122, 88,0.5)" }}>
+                 Vui lòng chọn loại sản phẩm để bắt đầu.
+               </p>
+            ) : selection.productType === "gift_box" ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Sản Phẩm</span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58", textAlign: "right" }}>Hộp Quà Hoa<br/><span style={{fontSize: "0.75rem", color: "rgba(115, 122, 88,0.6)"}}>Hoa hồng, gấu bông & thiệp</span></span>
+                </div>
+                {selection.hasCard && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Kèm Thiệp</span>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58", textAlign: "right" }}>{selection.cardSender ? `Từ: ${selection.cardSender}` : "Có"}</span>
+                    </div>
+                )}
+                </div>
+            ) : selection.tier ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Phân Khúc</span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58" }}>
+                      {TIERS.find(t => t.id === selection.tier)?.name}
+                  </span>
+                </div>
+
+                {step >= 2 && currentTierObj && (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Hoa Chủ Đạo</span>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58", textAlign: "right", maxWidth: "60%" }}>
+                        {selection.flower ? FLOWERS[selection.tier as "basic"|"standard"|"premium"].find((f: any) => f.id === selection.flower)?.name : "—"}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Số Lượng</span>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58", textAlign: "right", maxWidth: "60%" }}>
+                          {selection.stems} cành <span style={{fontSize: "0.75rem", color: "rgba(115, 122, 88,0.5)"}}>({formatVND(selection.stems * activeStemCost)})</span>
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Hoa Phụ</span>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58", textAlign: "right", maxWidth: "60%" }}>
+                        {selection.includeFiller ? `Có (${formatVND(currentTierObj.fillerCost)})` : "Không"}
+                      </span>
+                    </div>
+                    
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Vật Liệu Gói</span>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58", textAlign: "right", maxWidth: "60%" }}>
+                        {selection.includeWrapping ? `Có (${formatVND(currentTierObj.wrappingCost)})` : "Không"}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {selection.hasCard && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(115, 122, 88,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Kèm Thiệp</span>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", color: "#737a58", textAlign: "right" }}>{selection.cardSender ? `Từ: ${selection.cardSender}` : "Có"}</span>
+                    </div>
+                )}
+                </div>
+            ) : (
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "rgba(115, 122, 88,0.5)" }}>
+                  Vui lòng chọn phân khúc để bắt đầu.
+                </p>
+            )}
+
+            <div
+              style={{
+                borderTop: "1px solid rgba(115, 122, 88,0.1)",
+                paddingTop: "1.5rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+              }}
+            >
+              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", color: "#737a58", fontWeight: 600 }}>
+                Tạm tính
+              </span>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "1.4rem", color: "#C4A35A", fontWeight: 500 }}>
+                {formatVND(price)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .card-input::placeholder {
+          color: rgba(250, 246, 240, 0.5);
+        }
+        @media (max-width: 768px) {
+          .builder-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
