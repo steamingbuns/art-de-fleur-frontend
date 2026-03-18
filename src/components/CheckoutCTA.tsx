@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ShoppingBag, X, Plus, Minus, ArrowRight, Truck, Shield } from "lucide-react";
 
 interface CartItem {
@@ -20,6 +21,7 @@ export function CheckoutCTA({
   onCartClose,
   onBuildClick,
 }: CheckoutCTAProps) {
+  const navigate = useNavigate();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "shipping" | "payment" | "confirmed">("cart");
   const [email, setEmail] = useState("");
@@ -626,7 +628,12 @@ export function CheckoutCTA({
               )}
               <button
                 onClick={() => {
-                  if (checkoutStep === "cart") setCheckoutStep("shipping");
+                  if (checkoutStep === "cart") {
+                    onCartClose();
+                    const itemsWithQty = visibleItems.map(item => ({ ...item, quantity: getQuantity(item.name) }));
+                    navigate("/checkout", { state: { cartItems: itemsWithQty, subtotal, delivery, total } });
+                    window.scrollTo(0, 0);
+                  }
                   else if (checkoutStep === "shipping") setCheckoutStep("payment");
                   else if (checkoutStep === "payment") setCheckoutStep("confirmed");
                 }}

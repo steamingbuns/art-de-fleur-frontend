@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Customize from "./pages/Customize";
 import GiftBox from "./pages/GiftBox";
+import Checkout from "./pages/Checkout";
 import { ChatBox } from "./components/ChatBox";
 import "./styles/fonts.css";
 
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/customize" element={<Customize />} />
         <Route path="/gift-box" element={<GiftBox />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
       
       <ChatBox />

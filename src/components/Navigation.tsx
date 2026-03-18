@@ -42,6 +42,24 @@ export function Navigation({ cartCount, onCartClick, forceSolid = false }: Navig
       return;
     }
 
+    if (id === "story" || id === "pre-order") {
+      const targetId = id === "pre-order" ? "showcase" : id;
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+          else window.scrollTo({ top: 0, behavior: "smooth" });
+        }, 100);
+      } else {
+        const el = document.getElementById(targetId);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+        else window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      setMenuOpen(false);
+      return;
+    }
+
     if (location.pathname !== "/") {
       navigate("/");
       setTimeout(() => {
