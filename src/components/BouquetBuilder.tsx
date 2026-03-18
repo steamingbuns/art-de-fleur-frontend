@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Check, ChevronRight, ChevronLeft, ShoppingBag, Plus, Minus, X } from "lucide-react";
 
 // ——— DATA ———
@@ -8,49 +8,56 @@ const formatVND = (price: number | undefined) => {
 };
 
 const TIERS = [
-  { id: "basic", name: "Bó hoa Cơ bản", minStems: 5, maxStems: 7, img: "https://plus.unsplash.com/premium_photo-1661636620747-9864306ee1e3?q=80&w=600" },
-  { id: "standard", name: "Bó hoa Tiêu chuẩn", minStems: 8, maxStems: 15, img: "https://plus.unsplash.com/premium_photo-1682800180168-abab5d9648b8?q=80&w=600" },
-  { id: "premium", name: "Bó hoa Cao cấp", minStems: 13, maxStems: 25, img: "https://plus.unsplash.com/premium_photo-1676479853024-06ae7b838894?q=80&w=600" }
+  { id: "basic", name: "Bó hoa Cơ bản", minStems: 5, maxStems: 7, desc: "Sự khởi đầu tuyệt vời với những bông hoa xinh xắn tinh tế. Lựa chọn hoàn hảo cho những dịp nhẹ nhàng, mang lại cảm giác tươi mới và thanh lịch.", img: "https://plus.unsplash.com/premium_photo-1661636620747-9864306ee1e3?q=80&w=600" },
+  { id: "standard", name: "Bó hoa Tiêu chuẩn", minStems: 8, maxStems: 15, desc: "Sự kết hợp hoàn hảo giữa vẻ đẹp trang nhã và sự phong phú. Gửi gắm trọn vẹn tình cảm qua từng cành hoa được tuyển chọn kỹ lưỡng.", img: "https://plus.unsplash.com/premium_photo-1682800180168-abab5d9648b8?q=80&w=600" },
+  { id: "premium", name: "Bó hoa Cao cấp", minStems: 13, maxStems: 25, desc: "Trải nghiệm sang trọng với những bông hoa lộng lẫy và đắt giá nhất. Một món quà đẳng cấp thiết kế nguyên bản dành riêng cho người đặc biệt.", img: "https://plus.unsplash.com/premium_photo-1676479853024-06ae7b838894?q=80&w=600" }
 ];
 
 const FLOWERS: Record<string, any[]> = {
   basic: [
-    { id: "tana", name: "Cúc Tana", price: 15000, img: "https://plus.unsplash.com/premium_photo-1667867937010-77fd5161cf8d?q=80&w=400" },
-    { id: "baby", name: "Hoa Bi Trắng", price: 12000, img: "https://plus.unsplash.com/premium_photo-1666621588981-65d8218bfc38?q=80&w=400" },
-    { id: "statice", name: "Hoa Salem", price: 14000, img: "https://plus.unsplash.com/premium_photo-1764258557889-5e5df466d68e?q=80&w=400" },
-    { id: "carnation", name: "Cẩm Chướng", price: 18000, img: "https://plus.unsplash.com/premium_photo-1677178629088-ba7d3a23049a?q=80&w=400" },
-    { id: "gerbera", name: "Đồng Tiền", price: 20000, img: "https://plus.unsplash.com/premium_photo-1723708803755-b5f72631ab48?q=80&w=400" },
-    { id: "heathbell", name: "Chuông Thảo", price: 16000, img: "https://plus.unsplash.com/premium_photo-1720524513100-2fa5f656272f?q=80&w=400" },
-    { id: "pingpong", name: "Cúc Pingpong", price: 15000, img: "https://plus.unsplash.com/premium_photo-1721317368393-09204f05aab5?q=80&w=400" }
+    { id: "baby", name: "Hoa baby", price: 15000, img: "https://plus.unsplash.com/premium_photo-1666621588981-65d8218bfc38?q=80&w=400" },
+    { id: "tana", name: "Hoa cúc tana", price: 20000, img: "https://plus.unsplash.com/premium_photo-1667867937010-77fd5161cf8d?q=80&w=400" },
+    { id: "statice", name: "Hoa sao tím", price: 25000, img: "https://plus.unsplash.com/premium_photo-1764258557889-5e5df466d68e?q=80&w=400" },
+    { id: "carnation", name: "Hoa cẩm chướng", price: 35000, img: "https://plus.unsplash.com/premium_photo-1677178629088-ba7d3a23049a?q=80&w=400" },
+    { id: "gerbera", name: "Hoa đồng tiền", price: 35000, img: "https://plus.unsplash.com/premium_photo-1723708803755-b5f72631ab48?q=80&w=400" },
+    { id: "heathbell", name: "Hoa thạch thảo", price: 25000, img: "https://plus.unsplash.com/premium_photo-1720524513100-2fa5f656272f?q=80&w=400" },
+    { id: "pingpong", name: "Hoa cúc ping pong", price: 30000, img: "https://plus.unsplash.com/premium_photo-1721317368393-09204f05aab5?q=80&w=400" }
   ],
   standard: [
-    { id: "rose", name: "Hoa Hồng", price: 25000, img: "https://plus.unsplash.com/premium_photo-1673716788461-0aa43e5d2015?q=80&w=400" },
-    { id: "sunflower", name: "Hướng Dương", price: 30000, img: "https://plus.unsplash.com/premium_photo-1688045802023-60a42a082776?q=80&w=400" },
-    { id: "lisianthus", name: "Cát Tường", price: 28000, img: "https://plus.unsplash.com/premium_photo-1661611134994-ea692684c976?q=80&w=400" },
-    { id: "wax", name: "Thanh Liễu", price: 20000, img: "https://plus.unsplash.com/premium_photo-1661427503852-5e2700754174?q=80&w=400" }
+    { id: "rose", name: "Hoa hồng Đà Lạt", price: 50000, img: "https://plus.unsplash.com/premium_photo-1673716788461-0aa43e5d2015?q=80&w=400" },
+    { id: "sunflower", name: "Hoa hướng dương", price: 47500, img: "https://plus.unsplash.com/premium_photo-1688045802023-60a42a082776?q=80&w=400" },
+    { id: "lisianthus", name: "Hoa cát tường", price: 60000, img: "https://plus.unsplash.com/premium_photo-1661611134994-ea692684c976?q=80&w=400" },
+    { id: "ranunculus", name: "Hoa mao lương", price: 80000, img: "https://plus.unsplash.com/premium_photo-1682800180168-abab5d9648b8?q=80&w=400" },
+    { id: "wax", name: "Hoa thanh liễu", price: 50000, img: "https://plus.unsplash.com/premium_photo-1661427503852-5e2700754174?q=80&w=400" },
+    { id: "chrysanthemum_peony", name: "Hoa cúc mẫu đơn", price: 47500, img: "https://plus.unsplash.com/premium_photo-1769006095512-da1a45e5e55e?q=80&w=400" },
+    { id: "violet", name: "Hoa violet", price: 60000, img: "https://plus.unsplash.com/premium_photo-1667867937010-77fd5161cf8d?q=80&w=400" },
+    { id: "freesias", name: "Hoa freesias", price: 70000, img: "https://plus.unsplash.com/premium_photo-1764258557889-5e5df466d68e?q=80&w=400" }
   ],
   premium: [
-    { id: "tulip", name: "Hoa Tulip", price: 40000, img: "https://plus.unsplash.com/premium_photo-1661427503852-5e2700754174?q=80&w=400" },
-    { id: "peony", name: "Mẫu Đơn", price: 60000, img: "https://plus.unsplash.com/premium_photo-1661346020292-a39c04af8e20?q=80&w=400" },
-    { id: "hydrangea", name: "Cẩm Tú Cầu", price: 50000, img: "https://plus.unsplash.com/premium_photo-1668073436953-492767f88b8d?q=80&w=400" },
-    { id: "lily", name: "Hoa Ly", price: 45000, img: "https://plus.unsplash.com/premium_photo-1676068243733-df1880c2aef8?q=80&w=400" },
-    { id: "orchid", name: "Lan Hồ Điệp", price: 55000, img: "https://plus.unsplash.com/premium_photo-1673931249523-69dcbace086b?q=80&w=400" }
+    { id: "tulip", name: "Hoa Tulip", price: 105000, img: "https://plus.unsplash.com/premium_photo-1661427503852-5e2700754174?q=80&w=400" },
+    { id: "lily", name: "Hoa Lily", price: 107500, img: "https://plus.unsplash.com/premium_photo-1676068243733-df1880c2aef8?q=80&w=400" },
+    { id: "hydrangea", name: "Hoa cẩm tú cầu", price: 130000, img: "https://plus.unsplash.com/premium_photo-1668073436953-492767f88b8d?q=80&w=400" },
+    { id: "mini_orchid", name: "Hoa lan hồ điệp mini", price: 150000, img: "https://plus.unsplash.com/premium_photo-1673931249523-69dcbace086b?q=80&w=400" },
+    { id: "peony", name: "Hoa mẫu đơn", price: 185000, img: "https://plus.unsplash.com/premium_photo-1661346020292-a39c04af8e20?q=80&w=400" },
+    { id: "protea", name: "Hoa protea", price: 215000, img: "https://plus.unsplash.com/premium_photo-1688045802023-60a42a082776?q=80&w=400" },
+    { id: "calla_lily", name: "Hoa calla lily", price: 145000, img: "https://plus.unsplash.com/premium_photo-1663133537288-5b9044e326a0?q=80&w=400" },
+    { id: "anthurium", name: "Hoa anthurium", price: 135000, img: "https://plus.unsplash.com/premium_photo-1677178629088-ba7d3a23049a?q=80&w=400" }
   ]
 };
 
 const WRAPPINGS = [
-  { id: "frosted", name: "Giấy Kính Mờ", price: 20000, img: "https://plus.unsplash.com/premium_photo-1770384361940-f991d8c9f715?q=80&w=400" },
-  { id: "tulle", name: "Giấy Lưới Tulle", price: 25000, img: "https://plus.unsplash.com/premium_photo-1704915934141-87da72ee5e43?q=80&w=400" },
-  { id: "vintage", name: "Giấy Báo Vintage", price: 15000, img: "https://plus.unsplash.com/premium_photo-1672944876342-4090164e1c04?q=80&w=400" },
-  { id: "silk", name: "Lưới Lụa", price: 30000, img: "https://images.unsplash.com/photo-1633903422938-8291a4606408?q=80&w=400" }
+  { id: "frosted", name: "Giấy Bóng Kính Mờ", img: "https://plus.unsplash.com/premium_photo-1770384361940-f991d8c9f715?q=80&w=400" },
+  { id: "tulle", name: "Giấy Lưới", img: "https://plus.unsplash.com/premium_photo-1704915934141-87da72ee5e43?q=80&w=400" },
+  { id: "vintage", name: "Giấy Báo Cổ Điển", img: "https://plus.unsplash.com/premium_photo-1672944876342-4090164e1c04?q=80&w=400" },
+  { id: "silk", name: "Giấy Gói Lưới Lụa", img: "https://images.unsplash.com/photo-1633903422938-8291a4606408?q=80&w=400" }
 ];
 
 const DECORATIONS = [
-  { id: "ribbon", name: "Ruy Băng", price: 15000, img: "https://plus.unsplash.com/premium_photo-1740426075438-78a931e19ce1?q=80&w=400" },
-  { id: "foliage", name: "Lá Trang Trí", price: 15000, img: "https://plus.unsplash.com/premium_photo-1661326215888-206abbebd313?q=80&w=400" },
-  { id: "filler", name: "Hoa Baby/Hoa Nhỏ", price: 12000, img: "https://plus.unsplash.com/premium_photo-1769006095512-da1a45e5e55e?q=80&w=400" },
-  { id: "picks", name: "Que Cắm Trang Trí", price: 10000, img: "https://plus.unsplash.com/premium_photo-1726812311448-b721dd8efaea?q=80&w=400" },
-  { id: "cards", name: "Thiệp Viết Tay", price: 18000, img: "https://plus.unsplash.com/premium_photo-1663133537288-5b9044e326a0?q=80&w=400" }
+  { id: "ribbon", name: "Ruy Băng", img: "https://plus.unsplash.com/premium_photo-1740426075438-78a931e19ce1?q=80&w=400" },
+  { id: "foliage", name: "Lá Trang Trí", img: "https://plus.unsplash.com/premium_photo-1661326215888-206abbebd313?q=80&w=400" },
+  { id: "filler", name: "Hoa Phụ/Hoa Nhỏ", img: "https://plus.unsplash.com/premium_photo-1769006095512-da1a45e5e55e?q=80&w=400" },
+  { id: "picks", name: "Que Cắm Trang Trí", img: "https://plus.unsplash.com/premium_photo-1726812311448-b721dd8efaea?q=80&w=400" },
+  { id: "cards", name: "Thiệp Viết Tay", img: "https://plus.unsplash.com/premium_photo-1663133537288-5b9044e326a0?q=80&w=400" }
 ];
 
 const PREVIEWS: Record<string, any[]> = {
@@ -91,6 +98,7 @@ interface BouquetBuilderProps {
 
 export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
   const [step, setStep] = useState(type === "bouquet" ? 0 : (type ? 1 : 0));
+  const [previewTier, setPreviewTier] = useState<string | null>(null);
   const [selection, setSelection] = useState<Selection>({
     productType: type || "",
     tier: "",
@@ -104,6 +112,20 @@ export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
     cardMessage: "",
   });
   const [completed, setCompleted] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | "auto">("auto");
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const observer = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+           setHeight((entry.target as HTMLElement).offsetHeight);
+        }
+      });
+      observer.observe(contentRef.current);
+      return () => observer.disconnect();
+    }
+  }, [step, previewTier]);
 
   // Compute currently utilized stems
   const currentStems = Object.values(selection.flowerCounts).reduce((a, b) => a + b, 0);
@@ -118,13 +140,15 @@ export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
         if (flower) total += flower.price * qty;
       });
       if (selection.wrapping) {
-        const wrap = WRAPPINGS.find(w => w.id === selection.wrapping);
-        if (wrap) total += wrap.price;
+        if (selection.tier === 'basic') total += 30000;
+        else if (selection.tier === 'standard') total += 40000;
+        else if (selection.tier === 'premium') total += 60000;
       }
-      selection.decorations.forEach(dId => {
-        const dec = DECORATIONS.find(d => d.id === dId);
-        if (dec) total += dec.price;
-      });
+      if (selection.decorations.length >= 3) {
+        if (selection.tier === 'basic') total += 30000;
+        else if (selection.tier === 'standard') total += 50000;
+        else if (selection.tier === 'premium') total += 80000;
+      }
     }
     return total;
   }, [selection]);
@@ -206,36 +230,71 @@ export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
         
         {/* If bouquet format, render the overhauled UI */}
         {selection.productType === "bouquet" && (
-          <div className="builder-grid" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "2rem" }}>
+          <div className="builder-grid" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "2rem", alignItems: "start" }}>
             
             {/* Main Area */}
-            <div style={{ background: "#FFFFFF", padding: "2rem", borderRadius: "20px", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", position: "relative", overflow: "hidden" }}>
-              
-              {/* Fake floral background inside the card */}
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "300px", backgroundImage: "url(https://plus.unsplash.com/premium_photo-1677682897278-a0565677945a?q=80&w=1600)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.15, zIndex: 0, pointerEvents: "none" }} />
-              
-              <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ background: "#FFFFFF", borderRadius: "20px", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", position: "relative", overflow: "hidden", transition: "height 0.5s ease", height: height === "auto" ? "auto" : height }}>
+              <div ref={contentRef} style={{ padding: "2rem", position: "relative" }}>
+                
+                {/* Fake floral background inside the card */}
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "200px", backgroundImage: "url(https://plus.unsplash.com/premium_photo-1677682897278-a0565677945a?q=80&w=1600)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.15, zIndex: 0, pointerEvents: "none" }} />
+                
+                <div style={{ position: "relative", zIndex: 1 }}>
                 {/* STEP 0: TIER SELECTION */}
                 {step === 0 && (
                   <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease" }}>
-                    <div style={{ background: "#FFFFFF", padding: "1rem 3rem", borderRadius: "40px", display: "inline-block", border: "1px solid rgba(0,0,0,0.05)", marginBottom: "3rem", marginTop: "2rem" }}>
+                    <div style={{ background: "#FFFFFF", padding: "1rem 3rem", borderRadius: "40px", display: "inline-block", border: "1px solid rgba(0,0,0,0.05)", marginBottom: "1rem", marginTop: "2rem" }}>
                       <h2 style={{ fontFamily: "'Great Vibes', cursive", fontSize: "3.5rem", color: "#2B3020", margin: 0, lineHeight: 1 }}>
                         Tạo tác phẩm hoa của riêng bạn
                       </h2>
                     </div>
+                  </div>
+                )}
 
+                {step === 0 && !previewTier && (
+                  <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "2rem", marginTop: "2rem" }}>
                       {TIERS.map(tier => (
                         <div key={tier.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", transition: "transform 0.3s ease" }}
                              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
                              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-                             onClick={() => { setSelection(s => ({ ...s, tier: tier.id, flowerCounts: {} })); setStep(1); }}
+                             onClick={() => setPreviewTier(tier.id)}
                         >
                           <img src={tier.img} style={{ width: "220px", height: "220px", objectFit: "cover", borderRadius: "50%", border: "8px solid #FFF", boxShadow: "0 10px 30px rgba(0,0,0,0.08)" }} alt={tier.name} />
                           <h3 style={{ fontFamily: "'Great Vibes', cursive", fontSize: "2.8rem", color: "#2B3020", marginTop: "1rem" }}>{tier.name}</h3>
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {step === 0 && previewTier && (
+                  <div style={{ display: "flex", gap: "3rem", alignItems: "center", animation: "slideLeft 0.5s ease", padding: "2rem 0" }}>
+                    {(() => {
+                      const tier = TIERS.find(t => t.id === previewTier);
+                      if (!tier) return null;
+                      return (
+                        <>
+                          <div style={{ flex: "0 0 380px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <img src={tier.img} style={{ width: "280px", height: "280px", objectFit: "cover", borderRadius: "50%", border: "8px solid #FFF", boxShadow: "0 10px 30px rgba(0,0,0,0.08)" }} alt={tier.name} />
+                            <h3 style={{ fontFamily: "'Great Vibes', cursive", fontSize: "3.2rem", color: "#2B3020", marginTop: "1.5rem", textAlign: "center", whiteSpace: "nowrap" }}>{tier.name}</h3>
+                          </div>
+                          <div style={{ flex: "1", animation: "fadeIn 0.8s ease 0.2s both" }}>
+                            <h4 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "2.2rem", color: "#4A3B32", marginBottom: "1.5rem" }}>Khám phá {tier.name}</h4>
+                            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "1.1rem", lineHeight: 1.8, color: "#555", marginBottom: "1.5rem" }}>
+                              {tier.desc}
+                            </p>
+                            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "1.1rem", fontWeight: 600, color: "#4A3B32", marginBottom: "2.5rem" }}>
+                              Số lượng cành: {tier.minStems} - {tier.maxStems} cành
+                            </p>
+                            <div style={{ display: "flex", gap: "1rem" }}>
+                              <button onClick={() => { setPreviewTier(null); setSelection(s => ({ ...s, tier: "", flowerCounts: {}, wrapping: "", decorations: [], previewType: "" })); setStep(0); }} style={{ padding: "0.8rem 2rem", background: "transparent", border: "1px solid #4A3B32", color: "#4A3B32", borderRadius: "30px", fontFamily: "'Inter', sans-serif", fontWeight: 500, cursor: "pointer", transition: "all 0.3s ease" }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(74,59,50,0.05)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>Quay lại</button>
+                              <button onClick={() => { setSelection(s => ({ ...s, tier: tier.id, flowerCounts: {}, wrapping: "", decorations: [], previewType: "" })); setStep(1); }} style={{ padding: "0.8rem 2rem", background: "#4A3B32", border: "none", color: "#FFF", borderRadius: "30px", fontFamily: "'Inter', sans-serif", fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", transition: "all 0.3s ease" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>Bắt đầu thiết kế <ChevronRight size={18} /></button>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -365,7 +424,13 @@ export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
 
                       return (
                         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4rem", borderTop: "1px solid rgba(0,0,0,0.05)", paddingTop: "2rem" }}>
-                          <button onClick={() => setStep(step - 1)} style={{ background: "transparent", border: "1px solid #4A3B32", color: "#4A3B32", padding: "0.8rem 2rem", borderRadius: "30px", fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <button onClick={() => {
+                            if (step === 1) {
+                              setSelection(s => ({ ...s, tier: "", flowerCounts: {}, wrapping: "", decorations: [], previewType: "" })); setPreviewTier(null); setStep(0);
+                            } else {
+                              setStep(step - 1);
+                            }
+                          }} style={{ background: "transparent", border: "1px solid #4A3B32", color: "#4A3B32", padding: "0.8rem 2rem", borderRadius: "30px", fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                               <ChevronLeft size={18} /> Quay lại
                             </button>
                             <button disabled={isNextDisabled} onClick={() => setStep(step + 1)} style={{ background: isNextDisabled ? "#ccc" : "#9A715B", border: "none", color: "#FFF", padding: "0.8rem 2rem", borderRadius: "30px", fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", cursor: isNextDisabled ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", transition: "all 0.3s" }}>
@@ -403,6 +468,7 @@ export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
                      </div>
                   </div>
                 )}
+              </div>
               </div>
             </div>
 
@@ -471,6 +537,7 @@ export function BouquetBuilder({ onAddToCart, type }: BouquetBuilderProps) {
       </div>
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideLeft { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
       `}</style>
     </section>
   );
