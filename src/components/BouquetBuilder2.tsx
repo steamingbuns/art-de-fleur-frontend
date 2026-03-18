@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { ChevronRight, ArrowLeft, ArrowRight, ShoppingBag, Check, Flower2, Gift, Sparkles } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowLeft, ArrowRight, ShoppingBag, Check, Flower2, Gift, Sparkles } from 'lucide-react';
 
 // --- DATA OBJECTS ---
 const TIERS = [
@@ -13,7 +13,7 @@ const FLOWERS = [
   { id: 'pink_peony', name: 'Pink Peony', price: 45000, category: 'main', image: 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&q=80&w=200' },
   { id: 'white_lily', name: 'White Lily', price: 40000, category: 'main', image: 'https://images.unsplash.com/photo-1601708849767-1eee40e70462?auto=format&fit=crop&q=80&w=200' },
   { id: 'sunflower', name: 'Sunflower', price: 25000, category: 'main', image: 'https://images.unsplash.com/photo-1588880331179-bc9b9be5031b?auto=format&fit=crop&q=80&w=200' },
-  { id: 'baby_breath', name: 'Baby\\'s Breath', price: 15000, category: 'filler', image: 'https://images.unsplash.com/photo-1616875887229-3738090dbbf0?auto=format&fit=crop&q=80&w=200' },
+  { id: 'baby_breath', name: "Baby's Breath", price: 15000, category: 'filler', image: 'https://images.unsplash.com/photo-1616875887229-3738090dbbf0?auto=format&fit=crop&q=80&w=200' },
   { id: 'eucalyptus', name: 'Eucalyptus', price: 10000, category: 'foliage', image: 'https://images.unsplash.com/photo-1603504781467-f584e8cd5c1b?auto=format&fit=crop&q=80&w=200' },
 ];
 
