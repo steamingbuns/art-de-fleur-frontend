@@ -24,35 +24,22 @@ export function Navigation({ cartCount, onCartClick, forceSolid = false }: Navig
   }, []);
 
   const scrollTo = (id: string) => {
-    if (id === "customize") {
-      navigate("/customize");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      setMenuOpen(false);
-      return;
-    }
-    if (id === "gift-box") {
-      navigate("/gift-box");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      setMenuOpen(false);
-      return;
-    }
     if (id === "contact") {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
       setMenuOpen(false);
       return;
     }
 
-    if (id === "story" || id === "pre-order") {
-      const targetId = id === "pre-order" ? "showcase" : id;
+    if (["story", "pre-order", "customize", "gift-box"].includes(id)) {
       if (location.pathname !== "/") {
         navigate("/");
         setTimeout(() => {
-          const el = document.getElementById(targetId);
+          const el = document.getElementById(id);
           if (el) el.scrollIntoView({ behavior: "smooth" });
           else window.scrollTo({ top: 0, behavior: "smooth" });
         }, 100);
       } else {
-        const el = document.getElementById(targetId);
+        const el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: "smooth" });
         else window.scrollTo({ top: 0, behavior: "smooth" });
       }

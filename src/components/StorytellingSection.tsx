@@ -196,132 +196,182 @@ export function StorytellingSection() {
         />
       </div>
 
-      {/* Lifestyle editorial — 3-column visual story */}
+      {/* Lifestyle editorial — mapped to "Khám phá" explore section */}
       <div
         ref={ref2}
+        id="explore"
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: "2px",
-          background: "#E8DDD0",
+          background: "#737a58", // Olive/Green background
+          padding: "6rem 0",
+          overflow: "hidden",
+          position: "relative"
         }}
-        className="three-col"
       >
-        <div style={{ position: "relative", overflow: "hidden", aspectRatio: "3/4" }}>
-          <img
-            src={LIFESTYLE_IMAGE}
-            alt="Lifestyle"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: in2 ? "scale(1)" : "scale(1.12)",
-              transition: "transform 1.6s cubic-bezier(0.25,0.46,0.45,0.94) 0.1s",
-            }}
-          />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(115, 122, 88,0.85), transparent)", padding: "2.5rem 1.5rem 1.5rem" }}>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.3rem", fontStyle: "italic", color: "#FAF6F0", lineHeight: 1.3 }}>
-              "Dành riêng cho những khoảnh khắc vô giá."
-            </p>
-          </div>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: "5rem", opacity: in2 ? 1 : 0, transition: "opacity 0.8s ease" }}>
+          <h2 style={{ fontFamily: "'Great Vibes', cursive", fontSize: "clamp(3.5rem, 6vw, 5rem)", color: "#FAF6F0", fontWeight: 400, margin: 0, lineHeight: 1 }}>
+            Khám phá
+          </h2>
         </div>
-        <div style={{ position: "relative", overflow: "hidden", aspectRatio: "3/4" }}>
-          <img
-            src={STUDIO_IMAGE}
-            alt="Studio"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: in2 ? "scale(1)" : "scale(1.12)",
-              transition: "transform 1.6s cubic-bezier(0.25,0.46,0.45,0.94) 0.25s",
-            }}
-          />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(115, 122, 88,0.85), transparent)", padding: "2.5rem 1.5rem 1.5rem" }}>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.3rem", fontStyle: "italic", color: "#FAF6F0", lineHeight: 1.3 }}>
-              "Chế tác từ đôi tay, cảm nhận bằng trái tim."
-            </p>
-          </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: "4rem 3rem",
-            background: "#737a58",
-            aspectRatio: "3/4",
-          }}
-          className="story-side-text"
-        >
-          <p
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: "0.65rem",
-              letterSpacing: "0.4em",
-              textTransform: "uppercase",
-              color: "#C4A35A",
-              marginBottom: "1.5rem",
-              opacity: in2 ? 1 : 0,
-              transition: "opacity 0.8s ease 0.4s",
-            }}
-          >
-            Nghệ Thuật Chế Tác
-          </p>
-          <h3
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: "1.8rem",
-              fontWeight: 400,
-              color: "#FAF6F0",
-              lineHeight: 1.25,
-              marginBottom: "1.5rem",
-              opacity: in2 ? 1 : 0,
-              transform: in2 ? "none" : "translateY(20px)",
-              transition: "all 0.9s ease 0.5s",
-            }}
-          >
-            Từ Chợ Hoa Đến <em>Trái Tim</em> Trong 4 Giờ
-          </h3>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem", width: "100%", margin: "0 auto", paddingBottom: "2rem" }}>
           {[
-            "6h: Những chuyên gia của chúng tôi tuyển chọn hoa đẹp nhất tại chợ Rungis",
-            "8h: Nghệ nhân hoa bắt đầu tạo hình cho kiệt tác của bạn",
-            "10h: Kiểm định chất lượng & đóng gói theo dấu ấn đặc trưng",
-            "12h trở đi: Giao hàng trong ngày trên toàn Paris",
-          ].map((step, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                gap: "1rem",
-                marginBottom: "1rem",
-                opacity: in2 ? 1 : 0,
-                transform: in2 ? "none" : "translateX(-10px)",
-                transition: `all 0.7s ease ${0.6 + i * 0.12}s`,
-              }}
-            >
+            {
+              id: "pre-order",
+              title: "Pre-order",
+              subtitle: "Lưu Giữ Trọn Vẹn Đường Nét",
+              desc: "Những mẫu thiết kế thịnh hành luôn cần thời gian để chuẩn bị những loại hoa đặc biệt nhất.",
+              link: "Xem bộ sưu tập",
+              img: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=600&q=80",
+              align: "left" as const
+            },
+            {
+              id: "customize",
+              title: "Customize",
+              subtitle: "Kiến Tạo Kiệt Tác Độc Bản",
+              desc: "Không rập khuôn, không giới hạn. Tự do lựa chọn từng nhành hoa, sắc giấy gói và dải ruy băng để tự tay thiết kế nên một tác phẩm nghệ thuật mang đậm dấu ấn và câu chuyện của riêng bạn.",
+              link: "Thiết kế ngay",
+              img: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=600&q=80",
+              align: "right" as const
+            },
+            {
+              id: "gift-box",
+              title: "Gift-box",
+              subtitle: "Gói Trọn Sự Bất Ngờ",
+              desc: "Hơn cả một thiết kế hoa, mỗi chiếc hộp là một \"khu vườn thu nhỏ\" được cất giấu tinh tế. Tặng phẩm hoàn hảo để khoảnh khắc mở quà của người thương trở thành một trải nghiệm vỡ òa và khó quên.",
+              link: "Đặt ngay",
+              img: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=600&q=80",
+              align: "left" as const
+            }
+          ].map((item, i) => {
+            const isLeft = item.align === "left";
+            return (
               <div
+                key={item.id}
+                id={item.id}
                 style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  border: "1px solid rgba(196,163,90,0.5)",
+                  position: "relative",
                   display: "flex",
+                  flexDirection: isLeft ? "row" : "row-reverse",
                   alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  marginTop: "2px",
+                  justifyContent: "space-between",
+                  opacity: in2 ? 1 : 0,
+                  transform: in2 ? "none" : "translateY(20px)",
+                  transition: `all 0.8s ease ${0.2 + i * 0.2}s`,
                 }}
+                className="explore-row flex-col md:flex-row gap-8 md:gap-0"
               >
-                <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "0.75rem", color: "#C4A35A" }}>
-                  {i + 1}
-                </span>
+                {/* Text Box Area */}
+                <div 
+                  className="w-full md:w-[65%] flex relative z-10"
+                  style={{ 
+                    justifyContent: isLeft ? "flex-start" : "flex-end",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#FAF6F0",
+                      borderRadius: isLeft ? "0 15rem 15rem 0" : "15rem 0 0 15rem", // Flat on the outside, rounded near the center picture
+                      padding: isLeft
+                        ? "4rem 28rem 4rem 6rem" // padding right to make room for center image
+                        : "4rem 6rem 4rem 28rem", // padding left to make room for center image
+                      width: "100%",
+                      minHeight: "350px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      position: "relative",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                      transform: isLeft ? "translateX(-2rem)" : "translateX(2rem)", // Stretch it visually closer to the edge
+                    }}
+                    className="explore-text-box"
+                  >
+                    <h3 
+                      style={{ 
+                        fontFamily: "'Cormorant Garamond', serif", 
+                        fontSize: "clamp(4.5rem, 6vw, 5.5rem)", 
+                        color: "rgba(115, 122, 88, 0.15)", // Subtle watermark-like large title
+                        margin: "0 0 0.5rem 0",
+                        lineHeight: 0.9,
+                        letterSpacing: "0.02em"
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+                    <div style={{ position: "relative", zIndex: 2 }}>
+                      <h4 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.6rem", fontWeight: 700, color: "#737a58", margin: "0 0 1rem 0", letterSpacing: "0.02em" }}>
+                        {item.subtitle}
+                      </h4>
+                      <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.3rem", color: "#444", lineHeight: 1.6, margin: 0 }}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Link Area */}
+                <div className="w-full md:w-[35%] flex items-center justify-center p-8 z-10">
+                  <a 
+                    href={`/${item.id}`} 
+                    style={{ 
+                      fontFamily: "'Cormorant Garamond', serif", 
+                      fontSize: "2.5rem", 
+                      color: "#FAF6F0", 
+                      textDecoration: "underline", 
+                      textUnderlineOffset: "6px",
+                      fontStyle: "italic",
+                      transition: "color 0.3s ease",
+                      letterSpacing: "0.05em"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = "#C4A35A"}
+                    onMouseLeave={(e) => e.currentTarget.style.color = "#FAF6F0"}
+                  >
+                    {item.link}
+                  </a>
+                </div>
+
+                {/* Center Picture */}
+                <div 
+                  className="absolute z-20 pointer-events-none hidden md:block"
+                  style={{
+                    left: "50%",
+                    top: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    style={{
+                      width: "clamp(220px, 22vw, 320px)",
+                      height: "clamp(220px, 22vw, 320px)",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+                      border: "4px solid transparent"
+                    }}
+                  />
+                  {/* Decorative floral accent */}
+                  <div style={{ position: "absolute", inset: "-15px", border: "1.5px dashed rgba(196,163,90,0.5)", borderRadius: "50%", zIndex: -1 }} />
+                </div>
+                
+                {/* Mobile Picture */}
+                <div className="md:hidden flex justify-center w-full mb-4 z-20">
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    style={{
+                      width: "220px",
+                      height: "220px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+                    }}
+                  />
+                </div>
               </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.8rem", color: "rgba(250,246,240,0.65)", lineHeight: 1.6, fontWeight: 300 }}>
-                {step}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
