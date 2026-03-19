@@ -27,7 +27,7 @@ export function StorytellingSection() {
   const { ref: ref3, inView: in3 } = useInView();
 
   return (
-    <section id="story" style={{ background: "#FAF6F0", overflow: "hidden" }}>
+    <section id="story" style={{ background: "#FAF6F0", overflow: "hidden", scrollMarginTop: "80px" }}>  
 
       {/* Editorial split — Atelier story */}
       <div
@@ -250,8 +250,7 @@ export function StorytellingSection() {
                 key={item.id}
                 id={item.id}
                 style={{
-                  position: "relative",
-                  display: "flex",
+                  position: "relative",                  scrollMarginTop: "120px",                  display: "flex",
                   flexDirection: isLeft ? "row" : "row-reverse",
                   alignItems: "center",
                   justifyContent: "space-between",
