@@ -30,7 +30,21 @@ export function Navigation({ cartCount, onCartClick, forceSolid = false }: Navig
       return;
     }
 
-    if (["story", "pre-order", "customize", "gift-box"].includes(id)) {
+    if (id === "customize") {
+      navigate("/customize");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setMenuOpen(false);
+      return;
+    }
+
+    if (id === "gift-box") {
+      navigate("/gift-box");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setMenuOpen(false);
+      return;
+    }
+
+    if (["story", "pre-order"].includes(id)) {
       if (location.pathname !== "/") {
         navigate("/");
         setTimeout(() => {
@@ -49,9 +63,7 @@ export function Navigation({ cartCount, onCartClick, forceSolid = false }: Navig
 
     if (location.pathname !== "/") {
       navigate("/");
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 100);
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
