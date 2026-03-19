@@ -272,8 +272,8 @@ export function StorytellingSection() {
                       background: "#FAF6F0",
                       borderRadius: isLeft ? "0 15rem 15rem 0" : "15rem 0 0 15rem", // Flat on the outside, rounded near the center picture
                       padding: isLeft
-                        ? "4rem 28rem 4rem 6rem" // padding right to make room for center image
-                        : "4rem 6rem 4rem 28rem", // padding left to make room for center image
+                        ? "4rem 30rem 4rem 6rem" // padding right to make room for center image
+                        : "4rem 6rem 4rem 30rem", // padding left to make room for center image
                       width: "100%",
                       minHeight: "350px",
                       display: "flex",
