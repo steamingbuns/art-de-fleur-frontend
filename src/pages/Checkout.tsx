@@ -14,7 +14,7 @@ export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
   // We'll use location state if it has items, otherwise we'll fall back to global cart context
-  const { cartItems: globalCartItems } = useCart();
+  const { cartItems: globalCartItems, setCartItems } = useCart();
   
   const passedItems = location.state?.cartItems;
   const activeItems = passedItems?.length > 0 ? passedItems : globalCartItems;
@@ -47,12 +47,12 @@ export default function Checkout() {
     return () => clearTimeout(timer);
   }, []);
 
-  // When no items in cart, redirect back to home
+  // When no items in cart, redirect back to home (unless checkout is successful)
   useEffect(() => {
-    if (activeItems.length === 0) {
+    if (activeItems.length === 0 && step !== 3) {
       navigate('/');
     }
-  }, [activeItems, navigate]);
+  }, [activeItems, navigate, step]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -230,7 +230,10 @@ export default function Checkout() {
                             Quay Lại
                          </button>
                          <button 
-                            onClick={() => setStep(3)}
+                            onClick={() => {
+                              setStep(3);
+                              setCartItems([]);
+                            }}
                             style={{
                               background: "#737a58",
                               border: "none", color: "#FAF6F0", fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", letterSpacing: "0.15em", textTransform: "uppercase", padding: "1.2rem 3rem", cursor: "pointer", borderRadius: "5px", transition: "background 0.3s"
