@@ -3,17 +3,21 @@ import Home from "./pages/Home";
 import Customize from "./pages/Customize";
 import GiftBox from "./pages/GiftBox";
 import Checkout from "./pages/Checkout";
+import PreOrder from "./pages/PreOrder";
 import { ChatBox } from "./components/ChatBox";
+import { CartProvider } from "./contexts/CartContext";
 import "./styles/fonts.css";
 
 export default function App() {
   return (
-    <Router>
+    <CartProvider>
+      <Router>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/customize" element={<Customize />} />
         <Route path="/gift-box" element={<GiftBox />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/pre-order" element={<PreOrder />} />
       </Routes>
       
       <ChatBox />
@@ -65,6 +69,7 @@ export default function App() {
           line-height: unset;
         }
       `}</style>
-    </Router>
+      </Router>
+    </CartProvider>
   );
 }

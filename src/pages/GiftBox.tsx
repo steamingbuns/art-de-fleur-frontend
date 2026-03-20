@@ -2,14 +2,8 @@ import { useState, useCallback, useEffect } from "react";
 import { Navigation } from "../components/Navigation";
 import { CheckoutCTA } from "../components/CheckoutCTA";
 import { Footer } from "../components/Footer";
-import { useNavigate } from "react-router-dom";
+import { useCart } from "../contexts/CartContext";
 import { Heart, MessageCircle } from "lucide-react";
-
-interface CartItem {
-  name: string;
-  price: number;
-  quantity: number;
-}
 
 const giftBoxes = [
   {
@@ -42,7 +36,7 @@ const giftBoxes = [
 ];
 
 export default function GiftBox() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, addToCart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -53,20 +47,10 @@ export default function GiftBox() {
     return () => clearTimeout(timer);
   }, []);
 
-  const addToCart = useCallback((name: string, price: number) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.name === name);
-      if (existing) {
-        return prev.map((item) =>
-          item.name === name
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { name, price, quantity: 1 }];
-    });
+  const handleAddToCart = useCallback((name: string, price: number) => {
+    addToCart(name, price);
     setIsCartOpen(true);
-  }, []);
+  }, [addToCart]);
 
   const toggleWishlist = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -129,7 +113,7 @@ export default function GiftBox() {
               key={product.id}
               onMouseEnter={() => setHoveredId(product.id)}
               onMouseLeave={() => setHoveredId(null)}
-              onClick={() => addToCart(product.name, product.priceValue)}
+              onClick={() => handleAddToCart(product.name, product.priceValue)}
               style={{
                 background: "#FFFFFF",
                 cursor: "pointer",

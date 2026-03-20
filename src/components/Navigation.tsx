@@ -44,7 +44,14 @@ export function Navigation({ cartCount, onCartClick, forceSolid = false }: Navig
       return;
     }
 
-    if (["story", "pre-order"].includes(id)) {
+    if (id === "pre-order") {
+      navigate("/pre-order");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setMenuOpen(false);
+      return;
+    }
+
+    if (id === "story") {
       if (location.pathname !== "/") {
         navigate("/");
         setTimeout(() => {

@@ -7,32 +7,17 @@ import { BrandValues } from "../components/BrandValues";
 import { CheckoutCTA } from "../components/CheckoutCTA";
 import { Footer } from "../components/Footer";
 import { useNavigate } from "react-router-dom";
-
-interface CartItem {
-  name: string;
-  price: number;
-  quantity: number;
-}
+import { useCart } from "../contexts/CartContext";
 
 export default function Home() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, addToCart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const navigate = useNavigate();
 
-  const addToCart = useCallback((name: string, price: number) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.name === name);
-      if (existing) {
-        return prev.map((item) =>
-          item.name === name
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { name, price, quantity: 1 }];
-    });
+  const handleAddToCart = useCallback((name: string, price: number) => {
+    addToCart(name, price);
     setIsCartOpen(true);
-  }, []);
+  }, [addToCart]);
 
   const scrollToBuilder = () => {
     navigate("/customize");
@@ -54,7 +39,7 @@ export default function Home() {
         forceSolid={true}
       />
       <Hero onBuildClick={scrollToBuilder} />
-      <ProductShowcase onAddToCart={addToCart} />
+      <ProductShowcase onAddToCart={handleAddToCart} />
       <StorytellingSection />
       <BrandValues />
       <CheckoutCTA

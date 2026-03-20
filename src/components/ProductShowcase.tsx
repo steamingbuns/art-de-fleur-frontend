@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ArrowRight, Heart, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const products = [
+export const products = [
   {
     id: 1,
     name: "Khu Vườn Bí Mật",
@@ -111,11 +112,12 @@ export function ProductShowcase({ onAddToCart }: ProductShowcaseProps) {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [wishlist, setWishlist] = useState<Set<number>>(new Set());
   const [selectedProduct, setSelectedProduct] = useState<typeof products[0] | null>(null);
+  const navigate = useNavigate();
 
   const filtered =
     activeFilter === "Tất Cả"
-      ? products
-      : products.filter((p) => p.category === activeFilter);
+      ? products.slice(0, 4)
+      : products.filter((p) => p.category === activeFilter).slice(0, 4);
 
   const toggleWishlist = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -465,6 +467,7 @@ export function ProductShowcase({ onAddToCart }: ProductShowcaseProps) {
         {/* View all */}
         <div style={{ textAlign: "center", marginTop: "3.5rem" }}>
           <button
+            onClick={() => navigate('/pre-order')}
             style={{
               background: "transparent",
               border: "1px solid #737a58",

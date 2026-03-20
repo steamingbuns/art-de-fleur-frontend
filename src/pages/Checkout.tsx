@@ -3,6 +3,7 @@ import { Navigation } from "../components/Navigation";
 import { Footer } from "../components/Footer";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Check, Shield, Truck, CreditCard, Wallet, Banknote } from "lucide-react";
+import { useCart } from "../contexts/CartContext";
 
 const formatVND = (price: number | undefined) => {
   if (typeof price !== "number" || isNaN(price)) return "0 VNĐ";
@@ -12,7 +13,15 @@ const formatVND = (price: number | undefined) => {
 export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { cartItems = [], subtotal = 0, delivery = 0, total = 0 } = location.state || {};
+  // We'll use location state if it has items, otherwise we'll fall back to global cart context
+  const { cartItems: globalCartItems } = useCart();
+  
+  const passedItems = location.state?.cartItems;
+  const activeItems = passedItems?.length > 0 ? passedItems : globalCartItems;
+  
+  const subtotal = activeItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+  const delivery: number = 50000;
+  const total = subtotal + delivery;
   
   const [step, setStep] = useState(1);
   const PILL_STEPS = ["Thông Tin Giao Hàng", "Phương Thức Thanh Toán", "Xác Nhận"];
@@ -38,12 +47,12 @@ export default function Checkout() {
     return () => clearTimeout(timer);
   }, []);
 
-  // When no items in cart, redirect back to customize
+  // When no items in cart, redirect back to home
   useEffect(() => {
-    if (cartItems.length === 0) {
-      navigate('/customize');
+    if (activeItems.length === 0) {
+      navigate('/');
     }
-  }, [cartItems, navigate]);
+  }, [activeItems, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -57,7 +66,7 @@ export default function Checkout() {
         overflowX: "hidden",
       }}
     >
-      <Navigation cartCount={cartItems.length} forceSolid={true} onCartClick={() => {}} />
+      <Navigation cartCount={activeItems.reduce((acc: number, item: any) => acc + item.quantity, 0)} forceSolid={true} onCartClick={() => {}} />
 
       <div style={{ 
         paddingTop: "120px",
@@ -290,7 +299,7 @@ export default function Checkout() {
                     </h3>
                     
                     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2rem", maxHeight: "300px", overflowY: "auto" }}>
-                      {cartItems.map((item: any, idx: number) => (
+                      {activeItems.map((item: any, idx: number) => (
                         <div key={idx} style={{ display: "flex", gap: "1rem" }}>
                           <div style={{ width: "60px", height: "60px", background: "linear-gradient(135deg, #F2D4D8, #E8C0C8)", borderRadius: "10px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>
                             🌸

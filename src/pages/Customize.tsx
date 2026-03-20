@@ -4,15 +4,10 @@ import { BouquetBuilder } from "../components/BouquetBuilder";
 import { CheckoutCTA } from "../components/CheckoutCTA";
 import { Footer } from "../components/Footer";
 import { useNavigate } from "react-router-dom";
-
-interface CartItem {
-  name: string;
-  price: number;
-  quantity: number;
-}
+import { useCart } from "../contexts/CartContext";
 
 export default function Customize() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, addToCart } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
@@ -22,20 +17,10 @@ export default function Customize() {
     return () => clearTimeout(timer);
   }, []);
 
-  const addToCart = useCallback((name: string, price: number) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.name === name);
-      if (existing) {
-        return prev.map((item) =>
-          item.name === name
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { name, price, quantity: 1 }];
-    });
+  const handleAddToCart = useCallback((name: string, price: number) => {
+    addToCart(name, price);
     setIsCartOpen(true);
-  }, []);
+  }, [addToCart]);
 
   const scrollToBuilder = () => {
     // Already on builder page
@@ -64,7 +49,7 @@ export default function Customize() {
         transform: isVisible ? "translateY(0px)" : "translateY(50px)", 
         transition: "opacity 1.4s 0.3s, transform 1.4s 0.3s"
       }}> {/* Add offset for the fixed navbar */}
-        <BouquetBuilder onAddToCart={addToCart} type="bouquet" />
+        <BouquetBuilder onAddToCart={handleAddToCart} type="bouquet" />
       </div>
 
       <CheckoutCTA
